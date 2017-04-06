@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>在node.js中使用ejsExcel的坑 | 般若波罗蜜 博言</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="背景最近搜集了一些读写excel的插件，各有优劣，但发现ejsExcel可以通过模板实现样式与数据分离，感觉还不错，但使用中坑的确不少，记录了下，并提供了一些解决方法。 所遇到的问题1、生成的excel不好读取用ejsExcel生成的excel，我尝试了常用的js-xlsx、node-xlsx、excel-parser等来读取，结果数据都是空数组，这样不利于反复读写，最后尝试了xlsx-popul">
+<meta name="keywords" content="nodejs,excel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在node.js中使用ejsExcel的坑">
+<meta property="og:url" content="http://www.taotaogood.com/2017/04/05/在node.js中使用ejsExcel的坑/index.html">
+<meta property="og:site_name" content="般若波罗蜜 博言">
+<meta property="og:description" content="背景最近搜集了一些读写excel的插件，各有优劣，但发现ejsExcel可以通过模板实现样式与数据分离，感觉还不错，但使用中坑的确不少，记录了下，并提供了一些解决方法。 所遇到的问题1、生成的excel不好读取用ejsExcel生成的excel，我尝试了常用的js-xlsx、node-xlsx、excel-parser等来读取，结果数据都是空数组，这样不利于反复读写，最后尝试了xlsx-popul">
+<meta property="og:updated_time" content="2017-04-06T04:23:34.503Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在node.js中使用ejsExcel的坑">
+<meta name="twitter:description" content="背景最近搜集了一些读写excel的插件，各有优劣，但发现ejsExcel可以通过模板实现样式与数据分离，感觉还不错，但使用中坑的确不少，记录了下，并提供了一些解决方法。 所遇到的问题1、生成的excel不好读取用ejsExcel生成的excel，我尝试了常用的js-xlsx、node-xlsx、excel-parser等来读取，结果数据都是空数组，这样不利于反复读写，最后尝试了xlsx-popul">
+  
+    <link rel="alternate" href="/atom.xml" title="般若波罗蜜 博言" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e9d1acbd9de0a815a29cdaad4d5ebf8a";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">般若波罗蜜 博言</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">一只小小鱼，游呀游</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/classify">分类</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/aboutus">联系我</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://www.taotaogood.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main" ><article id="post-在node.js中使用ejsExcel的坑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/04/05/在node.js中使用ejsExcel的坑/" class="article-date">
+  <time datetime="2017-04-05T10:08:12.000Z" itemprop="datePublished">2017-04-05</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/server/">server</a>►<a class="article-category-link" href="/categories/server/nodejs/">nodejs</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      在node.js中使用ejsExcel的坑
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+
+
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>最近搜集了一些读写excel的插件，各有优劣，但发现ejsExcel可以通过模板实现样式与数据分离，感觉还不错，但使用中坑的确不少，记录了下，并提供了一些解决方法。</p>
+<h1 id="所遇到的问题"><a href="#所遇到的问题" class="headerlink" title="所遇到的问题"></a>所遇到的问题</h1><h2 id="1-生成的excel不好读取"><a href="#1、生成的excel不好读取" class="headerlink" title="1、生成的excel不好读取"></a>1、生成的excel不好读取</h2><p>用ejsExcel生成的excel，我尝试了常用的js-xlsx、node-xlsx、excel-parser等来读取，结果数据都是空数组，这样不利于反复读写，<br>最后尝试了xlsx-populate，可以读取出可用数据，在此提供他的读取api,<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">// Get 2D array of all values in the worksheet.</div><div class="line">const values = workbook.sheet(&quot;Sheet1&quot;).usedRange().value();</div></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<h2 id="2-excel的日期-数字格式值读出是数字"><a href="#2、excel的日期、数字格式值读出是数字" class="headerlink" title="2、excel的日期、数字格式值读出是数字"></a>2、excel的日期、数字格式值读出是数字</h2><p>例如：excel中60%的百分数格式读出的值会是0.6,2017/3/27的日期格式读出的值为42821。<br>如果读出的数据直接再通过ejsExcel生成excel文件，需要显示正确的单元格格式，需要：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;%~yourValue%&gt;在加上设置单元格格式,就可以输出日期格式,数字格式等.</div></pre></td></tr></table></figure></p>
+<p>如果只是想把看不懂的数字转换为正确的格式，那么尝试下xlsx-populate的api:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">const date = XlsxPopulate.numberToDate(num); // Wed Feb 22 2017 00:00:00 GMT-0500 (Eastern Standard Time)</div></pre></td></tr></table></figure></p>
+<h2 id="3-excel复制粘贴整行数据错位"><a href="#3、excel复制粘贴整行数据错位" class="headerlink" title="3、excel复制粘贴整行数据错位"></a>3、excel复制粘贴整行数据错位</h2><p>这种情况，其实是xlsx-populate的问题，读取出来的数据undefined代替空的单元格，复制粘贴的内容会错位一格。如图：</p>
+<p>这种情况只有js中写好判断有用数据前undefined的个数来错位回去。</p>
+<h2 id="4-日期数据处理很频繁时"><a href="#4、日期数据处理很频繁时" class="headerlink" title="4、日期数据处理很频繁时"></a>4、日期数据处理很频繁时</h2><p>推荐使用Date-Utils，这货用起来so easy!</p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>说好的ejsExcel呢？怎么感觉全是xlsx-populate，这是声东击西，委婉的解决问题，哈哈。</p>
+<h1 id="相关资源"><a href="#相关资源" class="headerlink" title="相关资源"></a>相关资源</h1><h2 id="date-utils"><a href="#Date-Utils" class="headerlink" title="Date-Utils"></a>Date-Utils</h2><ul>
+<li><p>nodejs日期时间插件Date-Utils<br><a href="https://segmentfault.com/a/1190000003777624" target="_blank" rel="external">https://segmentfault.com/a/1190000003777624</a></p>
+</li>
+<li><p>api<br><a href="https://jerrysievert.github.io/date-utils/Date.html" target="_blank" rel="external">https://jerrysievert.github.io/date-utils/Date.html</a></p>
+</li>
+</ul>
+<h2 id="ejsexcel"><a href="#ejsExcel" class="headerlink" title="ejsExcel"></a>ejsExcel</h2><ul>
+<li><p><a href="http://git.oschina.net/ccteams/ejsExcel" target="_blank" rel="external">http://git.oschina.net/ccteams/ejsExcel</a></p>
+</li>
+<li><p>nodejs excel表导出<br><a href="http://www.jianshu.com/p/48dc84f391c0" target="_blank" rel="external">http://www.jianshu.com/p/48dc84f391c0</a></p>
+</li>
+<li><p>在Node.js中使用ejsexcel输出EXCEL文件<br><a href="http://www.cnblogs.com/souvenir/p/6070722.html" target="_blank" rel="external">http://www.cnblogs.com/souvenir/p/6070722.html</a></p>
+</li>
+</ul>
+<h2 id="js-xlsx"><a href="#js-xlsx" class="headerlink" title="js-xlsx"></a>js-xlsx</h2><ul>
+<li>在 Node.js 中利用 js-xlsx 处理 Excel 文件<br><a href="http://scarletsky.github.io/2016/01/30/nodejs-process-excel/" target="_blank" rel="external">http://scarletsky.github.io/2016/01/30/nodejs-process-excel/</a></li>
+</ul>
+<h2 id="node-xlsx"><a href="#node-xlsx" class="headerlink" title="node-xlsx"></a>node-xlsx</h2><ul>
+<li><a href="https://github.com/mgcrea/node-xlsx" target="_blank" rel="external">https://github.com/mgcrea/node-xlsx</a></li>
+</ul>
+<h2 id="xlsx-populate"><a href="#xlsx-populate" class="headerlink" title="xlsx-populate"></a>xlsx-populate</h2><ul>
+<li><a href="https://github.com/dtjohnson/xlsx-populate#ranges" target="_blank" rel="external">https://github.com/dtjohnson/xlsx-populate#ranges</a></li>
+</ul>
+
+      
+
+      <!-- more -->
+
+<div style="margin-bottom:30px;">    
+  <p style="text-align:center">---------------------------------------------------------------------</p>
+  <p style="text-align:center">坚持原创技术分享，您的支持将鼓励我继续创作！</p>
+  <div id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>赏</span>
+  </div>
+  <div id="QR" style="display: none;text-align: center;">
+      <div id="wechat" style="display: inline-block;margin: 30px 0;">
+        <img id="wechat_qr" src="/img/wxpay.jpg" alt="">
+        <p style="font-size: 18px;margin-top: 18px;">微信打赏</p>
+      </div>
+  </div>
+</div>
+
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://www.taotaogood.com/2017/04/05/在node.js中使用ejsExcel的坑/" data-id="cj15tx7oj00006knj5yw63tfi" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/excel/">excel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nodejs/">nodejs</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/01/快乐coder/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          快乐coder
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+
+
+    <!-- 多说评论框 start -->
+  <div class="ds-thread" data-thread-key="2017/04/05/在node.js中使用ejsExcel的坑/" data-title="在node.js中使用ejsExcel的坑" data-url="http://www.taotaogood.com/2017/04/05/在node.js中使用ejsExcel的坑/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"taotaogood"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/04/05/在node.js中使用ejsExcel的坑/">在node.js中使用ejsExcel的坑</a>
+          </li>
+        
+          <li>
+            <a href="/2017/03/01/快乐coder/">快乐coder</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/server/">server</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/胡说八道/">胡说八道</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">文章目录</h3>
+    <div class="widget">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#背景"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#所遇到的问题"><span class="toc-text">所遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-生成的excel不好读取"><span class="toc-text">1、生成的excel不好读取</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-excel的日期-数字格式值读出是数字"><span class="toc-text">2、excel的日期、数字格式值读出是数字</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-excel复制粘贴整行数据错位"><span class="toc-text">3、excel复制粘贴整行数据错位</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-日期数据处理很频繁时"><span class="toc-text">4、日期数据处理很频繁时</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#结语"><span class="toc-text">结语</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#相关资源"><span class="toc-text">相关资源</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#date-utils"><span class="toc-text">Date-Utils</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ejsexcel"><span class="toc-text">ejsExcel</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#js-xlsx"><span class="toc-text">js-xlsx</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#node-xlsx"><span class="toc-text">node-xlsx</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#xlsx-populate"><span class="toc-text">xlsx-populate</span></a></li></ol></li></ol>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <a class="tag-link" href="/tags/excel/">excel</a> <a class="tag-link" href="/tags/nodejs/">nodejs</a> <a class="tag-link" href="/tags/胡说八道/">胡说八道</a>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 utouchme<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/classify" class="mobile-nav-link">分类</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/aboutus" class="mobile-nav-link">联系我</a>
+  
+</nav>
+    
+
+<script src="/js/jquery-1.10.1.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
